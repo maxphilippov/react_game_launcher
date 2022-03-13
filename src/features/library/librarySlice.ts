@@ -3,35 +3,41 @@ import { RootState, AppThunk } from '../../app/store';
 
 type GameStatus = 'playable' | 'downloading' | 'available';
 
- function fetchGame(game: Game) {
+function fetchGame(game: Game) {
   return new Promise<{ status: GameStatus }>((resolve) =>
     setTimeout(() => resolve({ status: 'playable' }), game.timeToDownload)
   );
 }
 
-export class Game {
+export interface GameDownloadData {
+  id: number;
+  name: String;
+  ETA: number;
+}
+
+export interface Game {
   id: number;
   name: String;
   status: GameStatus;
   timeToDownload: number;
-
-  constructor(id: number, name: String, timeToDownload: number) {
-    this.id = id;
-    this.name = name;
-    this.status = 'available';
-    this.timeToDownload = timeToDownload;
-  }
 }
 
 export interface LibraryState {
   games: Game[];
-  status: 'idle' | 'loading' | 'failed';
+  gamesDownloading: GameDownloadData[];
+  lastId: number;
 }
 
 const initialState: LibraryState = {
   games: [],
-  status: 'idle',
+  gamesDownloading: [],
+  lastId: 0,
 };
+
+for (let i = 0; i < 400; ++i) {
+  initialState.games.push({id: initialState.lastId, name: "Game#"+initialState.lastId, status: 'available', timeToDownload: 4000});
+  initialState.lastId += 1;
+}
 
 // The function below is called a thunk and allows us to perform async logic. It
 // can be dispatched like a regular action: `dispatch(incrementAsync(10))`. This
@@ -53,10 +59,8 @@ export const librarySlice = createSlice({
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
     addToLibrary: (state) => {
-      state.games.push(new Game(0, "Travel to mars", 4000));
-    },
-    decrement: (state) => {
-      // state.value -= 1;
+      state.games.push({id: state.lastId, name: "Game#"+state.lastId, status: 'available', timeToDownload: 4000});
+      state.lastId += 1;
     },
     // Use the PayloadAction type to declare the contents of `action.payload`
     incrementByAmount: (state, action: PayloadAction<number>) => {
@@ -68,7 +72,6 @@ export const librarySlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(downloadGame.pending, (state) => {
-        state.status = 'loading';
       })
       .addCase(downloadGame.fulfilled, (state, action) => {
         let idx = state.games.findIndex((v) => v.id === action.payload.id);
