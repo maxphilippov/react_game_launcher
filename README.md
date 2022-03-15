@@ -1,3 +1,5 @@
+Not content with current version. This seems to boring and unchallening, in process of changing the original goal.
+
 Let's design a hypothetical game launcher
 
 You can add games to your library (just random for now)
